@@ -22,7 +22,7 @@ public class HeaderNumberedAdapter extends RecyclerView.Adapter<TextViewHolder> 
 
     public HeaderNumberedAdapter(View header, int count) {
         if (header == null) {
-            throw new IllegalArgumentException("header may not be null");
+            throw new IllegalArgumentException("headerView may not be null");
         }
         this.header = header;
         this.labels = new ArrayList<String>(count);
@@ -49,7 +49,7 @@ public class HeaderNumberedAdapter extends RecyclerView.Adapter<TextViewHolder> 
         if (isHeader(position)) {
             return;
         }
-        final String label = labels.get(position - 1);  // Subtract 1 for header
+        final String label = labels.get(position - 1);  // Subtract 1 for headerView
         holder.textViewTitle.setText("Title " + label);
         holder.textViewContent.setText(label);
         holder.textViewTitle.setOnClickListener(

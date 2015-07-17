@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
 //        final HeaderNumberedAdapter headerAdapter  = new HeaderNumberedAdapter(headerPicture, 30);
-        final MultiHeaderNumberedAdapter headerAdapter = new MultiHeaderNumberedAdapter(MultiHeaderNumberedAdapter.getRandomItemList(5, this, recyclerView));
+        final MultiHeaderNumberedAdapter headerAdapter = new MultiHeaderNumberedAdapter(MultiHeaderNumberedAdapter.getRandomItemList(5, this, recyclerView),this);
         recyclerView.setAdapter(headerAdapter);
 
         mLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {

@@ -4,44 +4,50 @@ package com.inthecheesefactory.lab.designlibrary;
  * Created by anthonyfaucogney on 17/07/2015.
  */
 
+import android.app.Activity;
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
+
+import com.google.common.collect.ImmutableMap;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class MultiHeaderNumberedAdapter extends RecyclerView.Adapter<TextViewHolder> {
-    private static final int ITEM_VIEW_TYPE_HEADER = 0;
-    private static final int ITEM_VIEW_TYPE_ITEM = 1;
 
-    //    private final View header;
-    private List<List<String>> labelsList = null;
+    //    private final View headerView;
+//    private List<List<String>> labelsList = null;
     private int count = 0;
     List<ItemList> itemsList;
     List<Integer> headerPositions;
+    Activity activity;
 
-    public MultiHeaderNumberedAdapter(List<ItemList> itemList) {
-        if (itemList == null) {
-            throw new IllegalArgumentException("header may not be null");
+    public MultiHeaderNumberedAdapter(List<ItemList> itemsList, Activity activity) {
+        if (itemsList == null) {
+            throw new IllegalArgumentException("headerView may not be null");
         }
-
-        this.itemsList = itemList;
-        labelsList = new ArrayList<>(itemList.size());
-        headerPositions = new ArrayList<>(itemList.size());
-        for (ItemList item : itemsList) {
+        this.activity = activity;
+        this.itemsList = itemsList;
+//        labelsList = new ArrayList<>(itemsList.size());
+        headerPositions = new ArrayList<>(itemsList.size());
+        for (ItemList item : this.itemsList) {
             headerPositions.add(count);
-            List<String> labels = new ArrayList<>(item.count);
-            for (int i = 0; i < item.count; ++i) {
-                labels.add(String.valueOf(i));
-            }
-            labelsList.add(labels);
-            count += labels.size() + 1;
+//            List<String> labels = new ArrayList<>(item.count);
+//            for (int i = 0; i < item.count; ++i) {
+//                labels.add(String.valueOf(i));
+//            }
+//            labelsList.add(labels);
+            count += item.getCount() + 1;
         }
     }
 
@@ -49,11 +55,19 @@ public class MultiHeaderNumberedAdapter extends RecyclerView.Adapter<TextViewHol
         return headerPositions.contains(position);
     }
 
+    public AttributObject getItem(int position) {
+        final int listIndex = getListIndex(position);
+        final int listHeaderIndex = headerPositions.get(listIndex);
+
+        int location = position - listHeaderIndex - 1;
+        return this.itemsList.get(listIndex).getObject(location);
+//        final String label = labelsList.get(listIndex).get(location);  // Subtract 1 for headerView
+    }
+
     @Override
     public TextViewHolder onCreateViewHolder(ViewGroup parent, int position) {
         if (isHeader(position))
             return new TextViewHolder(getHeader(position));
-
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.generic_item, parent, false);
         return new TextViewHolder(view);
     }
@@ -63,26 +77,20 @@ public class MultiHeaderNumberedAdapter extends RecyclerView.Adapter<TextViewHol
         if (isHeader(position)) {
             return;
         }
-        final int listIndex = getList(position);
+        final int listIndex = getListIndex(position);
         final int listHeaderIndex = headerPositions.get(listIndex);
-        final int headerNumber = listIndex + 1;
 
-        int location = position - listHeaderIndex - 1;
-        final String label = labelsList.get(listIndex).get(location);  // Subtract 1 for header
+//        int location = position - listHeaderIndex - 1;
+//        final String label = labelsList.get(listIndex).get(location);  // Subtract 1 for headerView
 
-        holder.textViewTitle.setText("Title " + label);
-        holder.textViewContent.setText(label);
-        holder.textViewTitle.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
+        AttributObject currentAttribut = getItem(position);
+        if (currentAttribut != null)
 
-                    public void onClick(View v) {
-                        Toast.makeText(
-                                holder.textViewTitle.getContext(), label, Toast.LENGTH_SHORT).show();
-                    }
-                }
+            holder.render(currentAttribut, this.activity);
+        else
+            Log.v("Hello", String.valueOf(position));
 
-        );
+
     }
 
     @Override
@@ -96,7 +104,7 @@ public class MultiHeaderNumberedAdapter extends RecyclerView.Adapter<TextViewHol
         return count;
     }
 
-    public int getList(int position) {
+    public int getListIndex(int position) {
         int r = headerPositions.size() - 1;
         int j = 0;
         for (int i : headerPositions) {
@@ -110,12 +118,12 @@ public class MultiHeaderNumberedAdapter extends RecyclerView.Adapter<TextViewHol
     }
 
     public View getHeader(int position) {
-        int list = getList(position);
+        int list = getListIndex(position);
         if (list != -1) {
             Log.v("Hello", "Position: " + position + " - id: " + list);
             if (itemsList.get(list) != null) {
                 Log.v("Hello", position + "-" + count);
-                return itemsList.get(list).header;
+                return itemsList.get(list).headerView;
             }
         }
         return null;
@@ -124,7 +132,76 @@ public class MultiHeaderNumberedAdapter extends RecyclerView.Adapter<TextViewHol
     public static class ItemList {
         int count;
         String name;
-        View header;
+        View headerView;
+
+        public JSONObject getContent() {
+            return content;
+        }
+
+        public void setContent(JSONObject content) {
+            this.content = content;
+        }
+
+        public int getCount() {
+            return count;
+        }
+
+        public void setCount(int count) {
+            this.count = count;
+        }
+
+        public View getHeaderView() {
+            return headerView;
+        }
+
+        public void setHeaderView(View headerView) {
+            this.headerView = headerView;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        JSONObject content;
+        SparseArray<AttributObject> contentArray;
+
+        public ItemList(String name, JSONObject content, View headerView) {
+            this.headerView = headerView;
+            this.name = name;
+            this.count = content.length();
+            this.content = content;
+            contentArray = new SparseArray<>(this.count);
+            Iterator it = content.keys();
+//
+
+            int w = 0;
+            while (it.hasNext()) {
+                String key = (String) it.next();
+                AttributObject att = null;
+                try {
+                    String value = ((JSONObject) content.get(key)).getString("value");
+                    att = new AttributObject(new JSONObject(ImmutableMap.of(key, value)));
+                    if (((JSONObject) content.get(key)).getString("comment") != null)
+                        att.setExtraComment(((JSONObject) content.get(key)).getString("comment"));
+
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                } finally {
+                    contentArray.append(w, att);
+                    w++;
+                }
+
+            }
+        }
+
+        public AttributObject getObject(int position) {
+            return contentArray.get(position);
+        }
     }
 
     public static List<ItemList> getRandomItemList(int listsCount, Context context, ViewGroup parent) {
@@ -132,21 +209,102 @@ public class MultiHeaderNumberedAdapter extends RecyclerView.Adapter<TextViewHol
 
         for (int i = 0; i < listsCount; i++) {
 
-            ItemList item = new ItemList();
-            item.name = "Name " + i;
-            item.count = (int) (Math.random() * 20);
+            JSONObject obj = new JSONObject();
+
+
+            View headerView;
+            String name = "Firstname " + i;
+            int count = (int) (Math.random() * 20);
+
+            for (int j = 0; j < count; j++) {
+                try {
+
+                    JSONObject currentValue = new JSONObject(ImmutableMap.of("value", String.valueOf((int) (Math.random() * 2000))));
+
+                    String currentName = "name " + j;
+                    obj.accumulate(currentName, currentValue);
+                    if ((int) (Math.random() * 2) == 1) {
+                        JSONObject comment = new JSONObject(ImmutableMap.of("comment", "bla"));
+                        obj.put(currentName, merge(currentValue, comment));
+
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
             if ((int) (Math.random() * 2) == 1) {
-                item.count = (int) (Math.random() * 20);
-                item.header = LayoutInflater.from(context).inflate(R.layout.header_picture, parent, false);
+                headerView = LayoutInflater.from(context).inflate(R.layout.header_picture, parent, false);
+            } else {
+                headerView = LayoutInflater.from(context).inflate(R.layout.header_label, parent, false);
+                ((TextView) headerView.findViewById(R.id.text)).setText(name);
             }
-            else {
-                item.count = 0;
-                item.header = LayoutInflater.from(context).inflate(R.layout.header_label, parent, false);
-                ((TextView) item.header.findViewById(R.id.text)).setText(item.name);
-            }
+            ItemList item = new ItemList(name, obj, headerView);
             list.add(item);
         }
         return list;
 
+    }
+
+    public static class AttributObject {
+        String name;
+        String value;
+        String extraComment;
+
+        public AttributObject(String name, String value) {
+            this.name = name;
+            this.value = value;
+        }
+
+        public String getExtraComment() {
+            return extraComment;
+        }
+
+        public void setExtraComment(String extraComment) {
+            this.extraComment = extraComment;
+        }
+
+        public AttributObject(JSONObject obj) {
+
+            if (obj.length() != 1)
+                throw new Error("Bad Obj Size");
+            Iterator it = obj.keys();
+
+            this.name = obj.keys().next();
+            try {
+                this.value = (String) obj.get(this.name);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
+        }
+    }
+
+    public static JSONObject merge(JSONObject obj1, JSONObject obj2) throws JSONException {
+        JSONObject merged = new JSONObject();
+        JSONObject[] objs = new JSONObject[]{obj1, obj2};
+        for (JSONObject obj : objs) {
+            Iterator it = obj.keys();
+            while (it.hasNext()) {
+                String key = (String) it.next();
+                merged.put(key, obj.get(key));
+            }
+        }
+        return merged;
     }
 }
