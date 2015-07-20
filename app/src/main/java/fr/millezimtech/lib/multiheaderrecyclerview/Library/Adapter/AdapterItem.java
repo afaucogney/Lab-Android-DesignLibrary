@@ -1,4 +1,4 @@
-package com.inthecheesefactory.lab.designlibrary;
+package fr.millezimtech.lib.multiheaderrecyclerview.Library.Adapter;
 
 public class AdapterItem {
     public final ViewType viewType;

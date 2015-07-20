@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="multiheader_background_color">#EFEFF4</color>
+    <color name="multiheader_item_background_color">#FFFFFF</color>
+    <color name="multiheader_text_color">#000000</color>
+    <dimen name="multiheader_label_text_size">12dp</dimen>
+    <dimen name="multiheader_item_title_text_size">10dp</dimen>
+    <dimen name="multiheader_item_value_text_size">15dp</dimen>
+    <dimen name="multiheader_item_spacing">20dp</dimen>
+
+
+</resources>

@@ -6,6 +6,6 @@
     android:layout_height="wrap_content"
     android:textAppearance="?android:attr/textAppearanceLarge"
     android:text="Headert"
-    android:textColor="@android:color/holo_blue_dark"
-    android:background="@android:color/holo_orange_light"
+    android:textColor="@android:color/black"
+    android:background="@android:color/transparent"
     tools:text="0"/>
